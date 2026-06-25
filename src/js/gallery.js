@@ -115,12 +115,28 @@ function showAt(index) {
 function openLightbox(index) {
   showAt(index);
   lightbox.hidden = false;
+  lockBodyScroll();
 }
 
 function closeLightbox() {
   lightbox.hidden = true;
   lightboxImg.src = "";
   currentIndex = -1;
+  unlockBodyScroll();
+}
+
+let savedScrollY = 0;
+function lockBodyScroll() {
+  if (document.body.classList.contains("scroll-locked")) return;
+  savedScrollY = window.scrollY || window.pageYOffset || 0;
+  document.body.style.top = `-${savedScrollY}px`;
+  document.body.classList.add("scroll-locked");
+}
+function unlockBodyScroll() {
+  if (!document.body.classList.contains("scroll-locked")) return;
+  document.body.classList.remove("scroll-locked");
+  document.body.style.top = "";
+  window.scrollTo(0, savedScrollY);
 }
 
 function go(delta) {
@@ -178,7 +194,9 @@ export function initLightbox() {
     const dx = e.touches[0].clientX - touchStartX;
     const dy = e.touches[0].clientY - touchStartY;
     if (Math.abs(dx) > 10 || Math.abs(dy) > 10) touchMoved = true;
-  }, { passive: true });
+    // 라이트박스 위 제스처가 뒤 갤러리로 스크롤 새지 않도록 차단
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
   lightbox.addEventListener("touchend", (e) => {
     if (!touchMoved) return;
     const t = e.changedTouches[0];
