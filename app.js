@@ -1,4 +1,5 @@
 import { firebaseConfig, cloudinary } from "./config.js";
+const ADMIN_UID = "p6EDP1NNMZZ0zPWm6SD1kiqPeSE3";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
@@ -188,7 +189,7 @@ function renderCard(id, data) {
   card.append(img);
 
   // 본인 업로드에만 삭제 버튼 (1차 방어 — 진짜 방어는 Firestore 규칙)
-  if (currentUser && data.ownerUid === currentUser.uid) {
+  if (currentUser && (data.ownerUid === currentUser.uid || currentUser.uid === ADMIN_UID)) {
     const del = document.createElement("button");
     del.className = "del";
     del.textContent = "삭제";
