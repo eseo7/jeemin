@@ -122,15 +122,19 @@ fileInput.onchange = async () => {
 // ── 조회 플로우 (B): 최신순 30개씩 페이지네이션 ───────
 const PAGE = 30;
 let lastDoc = null, reachedEnd = false, loading = false;
+const renderedIds = new Set();
+let galleryToken = 0;
 
 async function loadMore() {
   if (loading || reachedEnd) return;
   loading = true;
+  const token = galleryToken;
   let q = lastDoc
     ? query(collection(db, "photos"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(PAGE))
     : query(collection(db, "photos"), orderBy("createdAt", "desc"), limit(PAGE));
   try {
     const snap = await getDocs(q);
+    if (token !== galleryToken) return;          // refreshGallery가 도중에 끼어들면 결과 폐기
     if (snap.empty && !lastDoc) showEmpty();
     snap.forEach((d) => renderCard(d.id, d.data()));
     lastDoc = snap.docs[snap.docs.length - 1] || lastDoc;
@@ -138,14 +142,16 @@ async function loadMore() {
   } catch (e) {
     toast("불러오기 실패: " + e.message);
   } finally {
-    loading = false;
+    if (token === galleryToken) loading = false;
   }
 }
 
 function refreshGallery() {
+  galleryToken++;                                // 진행 중인 loadMore 무효화
   grid.innerHTML = "";
   emptyEl.hidden = true;
   lastDoc = null; reachedEnd = false; loading = false;
+  renderedIds.clear();
   loadMore();
 }
 
@@ -158,8 +164,11 @@ function showEmpty() {
 
 // ── 카드 렌더 + 삭제 플로우 (C) ──────────────────────
 function renderCard(id, data) {
+  if (renderedIds.has(id)) return;               // 중복 가드: 같은 문서 두 번 그리지 않음
+  renderedIds.add(id);
   const card = document.createElement("figure");
   card.className = "card";
+  card.dataset.id = id;
   if (data.width && data.height) card.style.aspectRatio = `${data.width} / ${data.height}`;
 
   const img = document.createElement("img");
@@ -180,6 +189,7 @@ function renderCard(id, data) {
       try {
         await deleteDoc(doc(db, "photos", id));  // 규칙이 ownerUid==uid 검증
         card.remove();
+        renderedIds.delete(id);
         toast("삭제됨");
       } catch (err) {
         toast("삭제 실패: " + err.message);
