@@ -13,37 +13,42 @@ const grid = $("grid"), emptyEl = $("empty"),
 
 // 조회 플로우: 최신순 30개씩 페이지네이션
 const PAGE = 30;
-let lastDoc = null, reachedEnd = false, loading = false;
+let lastDoc = null, reachedEnd = false, loading = false, inflight = null;
 const renderedIds = new Set();
 const photos = []; // 렌더 순서대로 {id, publicId} 보관 — 라이트박스 좌우 이동용
 let galleryToken = 0;
 
-async function loadMore() {
-  if (loading || reachedEnd) return;
+function loadMore() {
+  if (reachedEnd) return Promise.resolve();
+  if (inflight) return inflight;
   loading = true;
   const token = galleryToken;
-  let q = lastDoc
+  const q = lastDoc
     ? query(collection(db, "photos"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(PAGE))
     : query(collection(db, "photos"), orderBy("createdAt", "desc"), limit(PAGE));
-  try {
-    const snap = await getDocs(q);
-    if (token !== galleryToken) return;          // refreshGallery가 도중에 끼어들면 결과 폐기
-    if (snap.empty && !lastDoc) showEmpty();
-    snap.forEach((d) => renderCard(d.id, d.data()));
-    lastDoc = snap.docs[snap.docs.length - 1] || lastDoc;
-    if (snap.size < PAGE) reachedEnd = true;
-  } catch (e) {
-    toast("불러오기 실패: " + e.message);
-  } finally {
-    if (token === galleryToken) loading = false;
-  }
+  inflight = (async () => {
+    try {
+      const snap = await getDocs(q);
+      if (token !== galleryToken) return;        // refreshGallery가 도중에 끼어들면 결과 폐기
+      if (snap.empty && !lastDoc) showEmpty();
+      snap.forEach((d) => renderCard(d.id, d.data()));
+      lastDoc = snap.docs[snap.docs.length - 1] || lastDoc;
+      if (snap.size < PAGE) reachedEnd = true;
+    } catch (e) {
+      toast("불러오기 실패: " + e.message);
+    } finally {
+      if (token === galleryToken) loading = false;
+      inflight = null;
+    }
+  })();
+  return inflight;
 }
 
 export function refreshGallery() {
   galleryToken++;                                // 진행 중인 loadMore 무효화
   grid.innerHTML = "";
   emptyEl.hidden = true;
-  lastDoc = null; reachedEnd = false; loading = false;
+  lastDoc = null; reachedEnd = false; loading = false; inflight = null;
   renderedIds.clear();
   photos.length = 0;
   loadMore();
@@ -102,14 +107,21 @@ function renderCard(id, data) {
 
 // ── 라이트박스 ───────────────────────────────────────
 let currentIndex = -1;
-let prevBtn, nextBtn;
+let prevBtn, nextBtn, loaderEl;
+
+function setLoading(on) {
+  if (!loaderEl) return;
+  loaderEl.hidden = !on;
+  lightbox.classList.toggle("is-loading", !!on);
+}
 
 function showAt(index) {
   if (index < 0 || index >= photos.length) return;
   currentIndex = index;
   lightboxImg.src = imgUrl(photos[index].publicId, 1080);
   if (prevBtn) prevBtn.disabled = index <= 0;
-  if (nextBtn) nextBtn.disabled = index >= photos.length - 1;
+  // 다음 버튼은 진짜 끝(reachedEnd && 마지막 인덱스)에서만 비활성
+  if (nextBtn) nextBtn.disabled = reachedEnd && index >= photos.length - 1;
 }
 
 function openLightbox(index) {
@@ -139,10 +151,17 @@ function unlockBodyScroll() {
   window.scrollTo(0, savedScrollY);
 }
 
-function go(delta) {
+async function go(delta) {
   const next = currentIndex + delta;
-  if (next < 0 || next >= photos.length) return;
-  showAt(next);
+  if (next < 0) return;                          // 왼쪽 끝: 멈춤
+  if (next < photos.length) { showAt(next); return; }
+  // 오른쪽 끝을 넘어가려는 경우 → 다음 페이지 로드 시도
+  if (reachedEnd) return;
+  setLoading(true);
+  try { await loadMore(); }
+  finally { setLoading(false); }
+  if (currentIndex + delta < photos.length) showAt(currentIndex + delta);
+  else if (nextBtn) nextBtn.disabled = reachedEnd;  // 로드 결과 갱신
 }
 
 export function initLightbox() {
@@ -163,7 +182,13 @@ export function initLightbox() {
     aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
   prevBtn.onclick = (e) => { e.stopPropagation(); go(-1); };
   nextBtn.onclick = (e) => { e.stopPropagation(); go(1); };
-  lightbox.append(prevBtn, nextBtn);
+
+  loaderEl = document.createElement("div");
+  loaderEl.className = "lb-loading";
+  loaderEl.hidden = true;
+  loaderEl.setAttribute("aria-label", "불러오는 중");
+
+  lightbox.append(prevBtn, nextBtn, loaderEl);
 
   // 배경 클릭 = 닫기 (기존 동작 유지)
   lightbox.onclick = (e) => {

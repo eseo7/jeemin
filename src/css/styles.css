@@ -226,6 +226,17 @@ body.scroll-locked {
 .lb-nav:disabled { opacity: .25; cursor: default; }
 .lb-prev { left: 16px; }
 .lb-next { right: 16px; }
+
+.lb-loading {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 44px; height: 44px; z-index: 42;
+  border-radius: 50%;
+  border: 3px solid rgba(244,237,248,.18);
+  border-top-color: var(--coral);
+  animation: spin .8s linear infinite;
+  pointer-events: none;
+}
+.lightbox.is-loading img { opacity: .35; transition: opacity .2s ease; }
 @media (max-width: 520px) {
   .lb-nav { width: 40px; height: 40px; }
   .lb-prev { left: 8px; }
