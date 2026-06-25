@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>jeemin gallery</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <!-- 설정 미입력 시 안내 배너 -->
+  <div id="setup-banner" class="banner" hidden>
+    <b>설정이 필요합니다.</b> <code>config.js</code>에 firebaseConfig와 Cloudinary 값을 붙여넣으세요. (README 참고)
+  </div>
+
+  <header class="topbar">
+    <div class="brand">jeemin</div>
+    <div id="auth-slot" class="auth-slot"><!-- 로그인 상태에 따라 채워짐 --></div>
+  </header>
+
+  <main>
+    <section id="grid" class="grid" aria-live="polite"></section>
+    <div id="empty" class="empty" hidden></div>
+    <div id="sentinel" class="sentinel"></div>
+  </main>
+
+  <!-- 업로드 FAB (로그인 시에만 표시) -->
+  <button id="fab" class="fab" hidden aria-label="사진 올리기">＋</button>
+  <input id="file-input" type="file" accept="image/*" multiple hidden>
+
+  <!-- 라이트박스 -->
+  <div id="lightbox" class="lightbox" hidden>
+    <img id="lightbox-img" alt="">
+  </div>
+
+  <!-- 토스트 -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

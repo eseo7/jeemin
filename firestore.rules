@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /photos/{id} {
+      allow read: if true;                                   // 공개 갤러리 (조회 무로그인)
+
+      allow create: if request.auth != null                  // 로그인 필수
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.publicId is string;
+
+      allow delete: if request.auth != null                  // 본인만 삭제
+        && resource.data.ownerUid == request.auth.uid;
+
+      allow update: if false;                                // 수정 없음
+    }
+  }
+}
