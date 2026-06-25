@@ -8,6 +8,7 @@
   --text:#ECEEF3; --muted:#9AA0AE; --accent:#A78BFA; --danger:#F46B6B;
 }
 *{box-sizing:border-box;}
+[hidden]{display:none!important;}
 html,body{margin:0;background:var(--ink);color:var(--text);
   font-family:'S-CoreDream','Pretendard','Apple SD Gothic Neo','Malgun Gothic',-apple-system,sans-serif;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
