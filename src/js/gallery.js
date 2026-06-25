@@ -115,13 +115,39 @@ function setLoading(on) {
   lightbox.classList.toggle("is-loading", !!on);
 }
 
+let showReqId = 0;
+
+function preloadAround(index) {
+  for (const off of [1, -1, 2, -2]) {
+    const p = photos[index + off];
+    if (!p) continue;
+    const im = new Image();
+    im.src = imgUrl(p.publicId, 1080);
+  }
+}
+
 function showAt(index) {
   if (index < 0 || index >= photos.length) return;
   currentIndex = index;
-  lightboxImg.src = imgUrl(photos[index].publicId, 1080);
   if (prevBtn) prevBtn.disabled = index <= 0;
   // 다음 버튼은 진짜 끝(reachedEnd && 마지막 인덱스)에서만 비활성
   if (nextBtn) nextBtn.disabled = reachedEnd && index >= photos.length - 1;
+
+  const reqId = ++showReqId;
+  const url = imgUrl(photos[index].publicId, 1080);
+  const loader = new Image();
+  setLoading(true);
+  loader.onload = () => {
+    if (reqId !== showReqId) return;            // stale 응답 무시 (가장 최근 요청만 반영)
+    lightboxImg.src = url;
+    setLoading(false);
+  };
+  loader.onerror = () => {
+    if (reqId !== showReqId) return;
+    setLoading(false);
+  };
+  loader.src = url;
+  preloadAround(index);
 }
 
 function openLightbox(index) {
@@ -131,6 +157,8 @@ function openLightbox(index) {
 }
 
 function closeLightbox() {
+  showReqId++;                                  // 닫힌 뒤 도착할 stale onload 무시
+  setLoading(false);
   lightbox.hidden = true;
   lightboxImg.src = "";
   currentIndex = -1;
