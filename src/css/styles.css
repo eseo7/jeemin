@@ -204,6 +204,24 @@ main { padding: 14px; padding-bottom: max(80px, calc(80px + env(safe-area-inset-
 }
 .lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 24px 64px rgba(0,0,0,.7); }
 
+.lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(26,17,32,.55); border: 1px solid var(--line2); color: var(--text);
+  cursor: pointer; z-index: 41;
+  transition: background .15s ease, opacity .15s ease;
+}
+.lb-nav:hover:not(:disabled) { background: rgba(26,17,32,.85); }
+.lb-nav:disabled { opacity: .25; cursor: default; }
+.lb-prev { left: 16px; }
+.lb-next { right: 16px; }
+@media (max-width: 520px) {
+  .lb-nav { width: 40px; height: 40px; }
+  .lb-prev { left: 8px; }
+  .lb-next { right: 8px; }
+}
+
 /* ── 토스트 ───────────────────────────────────────── */
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%);
