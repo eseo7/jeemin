@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+
   <!-- 설정 미입력 시 안내 배너 -->
   <div id="setup-banner" class="banner" hidden>
     <b>설정이 필요합니다.</b> <code>config.js</code>에 firebaseConfig와 Cloudinary 값을 붙여넣으세요. (README 참고)
@@ -18,13 +19,32 @@
   </header>
 
   <main>
+    <!-- 첫 로드 스켈레톤 — 아래 인라인 스크립트의 MutationObserver가 grid에
+         첫 카드가 들어오거나 empty 상태가 되면 hidden 처리함 -->
+    <div id="skeleton" class="skeleton-grid" aria-hidden="true">
+      <div class="sk-card" style="--h:268px"></div>
+      <div class="sk-card" style="--h:340px"></div>
+      <div class="sk-card" style="--h:210px"></div>
+      <div class="sk-card" style="--h:300px"></div>
+      <div class="sk-card" style="--h:250px"></div>
+      <div class="sk-card" style="--h:320px"></div>
+      <div class="sk-card" style="--h:185px"></div>
+      <div class="sk-card" style="--h:290px"></div>
+    </div>
+
     <section id="grid" class="grid" aria-live="polite"></section>
     <div id="empty" class="empty" hidden></div>
     <div id="sentinel" class="sentinel"></div>
   </main>
 
   <!-- 업로드 FAB (로그인 시에만 표시) -->
-  <button id="fab" class="fab" hidden aria-label="사진 올리기">＋</button>
+  <button id="fab" class="fab" hidden aria-label="사진 올리기">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
   <input id="file-input" type="file" accept="image/*" multiple hidden>
 
   <!-- 라이트박스 -->
@@ -34,6 +54,42 @@
 
   <!-- 토스트 -->
   <div id="toast" class="toast" hidden></div>
+
+  <!-- ── 시각 피드백 강화 (app.js 로직 무변경, UI 상태만 보강) ── -->
+  <script>
+  (function () {
+    var grid    = document.getElementById('grid');
+    var skeleton= document.getElementById('skeleton');
+    var empty   = document.getElementById('empty');
+    var fab     = document.getElementById('fab');
+    var toast   = document.getElementById('toast');
+
+    /* ① 이미지 페이드인: grid 내부 img 로드 완료 → .loaded 추가 */
+    grid.addEventListener('load', function (e) {
+      if (e.target.tagName === 'IMG') e.target.classList.add('loaded');
+    }, true);
+
+    /* ② 스켈레톤 숨김: grid에 첫 자식 or empty 노출 시 */
+    var skelObs = new MutationObserver(function () {
+      if (grid.children.length > 0 || !empty.hidden) {
+        skeleton.hidden = true;
+        skelObs.disconnect();
+      }
+    });
+    skelObs.observe(grid,  { childList: true });
+    skelObs.observe(empty, { attributes: true, attributeFilter: ['hidden'] });
+
+    /* ③ FAB 업로드 스피너: 토스트에 "업로드 중" 텍스트 감지 */
+    var fabObs = new MutationObserver(function () {
+      var busy = !toast.hidden && toast.textContent.indexOf('업로드 중') !== -1;
+      fab.classList.toggle('uploading', busy && !fab.hidden);
+    });
+    fabObs.observe(toast, {
+      childList: true, characterData: true, subtree: true,
+      attributes: true, attributeFilter: ['hidden']
+    });
+  }());
+  </script>
 
   <script type="module" src="./app.js"></script>
 </body>
