@@ -228,7 +228,8 @@ body.scroll-locked {
 .lb-next { right: 16px; }
 
 .lb-loading {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  position: absolute;
+  top: calc(50% - 22px); left: calc(50% - 22px);  /* spin 애니메이션이 transform을 차지하므로 translate 대신 calc로 중앙 정렬 */
   width: 44px; height: 44px; z-index: 42;
   border-radius: 50%;
   border: 3px solid rgba(244,237,248,.18);
