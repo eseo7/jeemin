@@ -5,10 +5,24 @@
 - 조회: 누구나 (무로그인)
 - 업로드·삭제: Google 로그인한 사용자 (삭제는 본인 것만)
 
-## 파일
-- `index.html` `styles.css` `app.js` — 갤러리 앱
-- `config.js` — **여기 두 곳만 채우면 끝**
-- `firestore.rules` — Firebase 콘솔에 붙여 게시할 보안 규칙
+## 파일 구조
+```
+/
+├── index.html              # Cloudflare Pages 진입점
+├── firestore.rules         # Firebase 보안 규칙 (콘솔에 붙여 게시)
+├── README.md
+└── src/
+    ├── css/
+    │   └── styles.css
+    └── js/
+        ├── config.js       # **여기 두 곳만 채우면 끝** (firebaseConfig, cloudinary)
+        ├── firebase.js     # Firebase 초기화
+        ├── auth.js         # 로그인/로그아웃 · ADMIN_UID
+        ├── cloudinary.js   # URL 빌더 · 리사이즈 · 업로드
+        ├── gallery.js      # 페이지네이션 · 카드 렌더 · 삭제 · 라이트박스 · 무한스크롤
+        ├── ui.js           # $ 셀렉터 · toast
+        └── main.js         # 진입점 (모듈 조립 · 이벤트 바인딩)
+```
 
 ## 1. config.js 채우기
 - **firebaseConfig**: Firebase 콘솔 → 프로젝트 설정 → 내 앱(웹) → SDK 설정의 객체를 그대로 복사
