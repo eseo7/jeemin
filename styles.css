@@ -69,8 +69,9 @@ html, body {
 }
 .auth-slot { display: flex; align-items: center; gap: 10px; }
 .uname {
-  font-size: 13px; font-weight: 500; color: var(--muted);
+  font-size: 13px; font-weight: 600; color: var(--coral);
   max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  letter-spacing: -.01em;
 }
 
 /* ── 버튼 ─────────────────────────────────────────── */
@@ -88,6 +89,20 @@ html, body {
   border: 1px solid var(--line2);
 }
 .btn.ghost:hover { color: var(--text); }
+
+/* ── 아이콘 전용 버튼 (로그아웃) ─────────────────────── */
+.btn.icon-btn {
+  width: 34px; height: 34px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border-color: transparent;
+  flex-shrink: 0; color: var(--coral);
+}
+.btn.icon-btn:hover {
+  color: var(--pink); border-color: var(--line2);
+  background: rgba(255,107,122,.12);
+  opacity: 1; transform: none;
+}
+.btn.icon-btn:active { transform: scale(.88); opacity: 1; }
 
 /* ── 배너 ─────────────────────────────────────────── */
 .banner {
